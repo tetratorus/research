@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/tetratorus/torusprotocol#readme",
   "dependencies": {
+    "bitcore-ecies": "^1.0.3",
     "truffle-hdwallet-provider": "0.0.6"
   }
 }
