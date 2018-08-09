@@ -2,11 +2,11 @@ pragma solidity ^0.4.24;
 
 import {bn256g1 as Curve} from './bn256g1.sol';
 
-library BlindSchnorr {
+library Schnorr {
   using Curve for Curve.Point;
-
+  
   // converts uint256 to string
-  function uintToString(uint v) pure public returns (string str) {
+  function uintToString(uint256 v) pure public returns (string str) {
     uint256 maxlength = 78;
     bytes memory reversed = new bytes(maxlength);
     uint256 i = 0;
