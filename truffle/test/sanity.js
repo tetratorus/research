@@ -1,6 +1,7 @@
 var bitcore = require('bitcore-lib');
 var ECIES = require('bitcore-ecies')();
 var Schnorr = artifacts.require('Schnorr');
+var Go = require('gonode').Go;
 // var contract = artifacts.require("ContractName");
 
 contract('Sanity Tests', function(accounts) {
@@ -31,9 +32,24 @@ contract('Sanity Tests', function(accounts) {
       })
       return true
     });
-  })
+  });
 
-  it("should sign and verify Schnorr signature", function() {
-    return
-  })
+  it("should run go code", async function() {
+    var res = await new Promise(function(resolve, reject) {
+      var go = new Go({
+        path	: '../go/bn256.go',
+        initAtOnce	: true
+      }, function(err, res) {
+        go.execute({command: 'Hello there...'}, function(result, response) {
+          if (result.ok) {
+            resolve(response);
+          } else if (result.timeout) {
+            reject("Command timed out");
+          }
+          go.close();
+        })
+      });
+    });
+    assert(res.response, "General Kenobi.")
+  });
 });
