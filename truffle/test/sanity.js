@@ -52,7 +52,7 @@ contract('Sanity Tests', function(accounts) {
   })
   
   it('should match solidity implementation (libNegate)', async function() {
-    var randomNumber = Math.floor(Math.random() * 1000)
+    var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
     var ecurveP = ec.curve.g.mul(randomNumber)
@@ -83,7 +83,7 @@ contract('Sanity Tests', function(accounts) {
 
   it('should match solidity implementation (libEqual)', async function() {
 
-    var randomNumber = Math.floor(Math.random() * 1000)
+    var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
     var ecurveP = ec.curve.g.mul(randomNumber)
@@ -94,7 +94,7 @@ contract('Sanity Tests', function(accounts) {
 
 
   it('should match solidity implementation (libFindYforX)', async function() {
-    var randomNumber = Math.floor(Math.random() * 1000)
+    var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
     var ecurveP = ec.curve.g.mul(randomNumber)
@@ -111,7 +111,7 @@ contract('Sanity Tests', function(accounts) {
   })
   
   it('should match solidity implementation (libIsInfinity)', async function() {
-    var randomNumber = Math.floor(Math.random() * 1000)
+    var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
     var ecurveP = ec.curve.g.mul(randomNumber)
@@ -124,7 +124,7 @@ contract('Sanity Tests', function(accounts) {
   })
   
   it('should match solidity implementation (libIsOnCurve)', async function() {
-    var randomNumber = Math.floor(Math.random() * 1000)
+    var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
     var ecurveP = ec.curve.g.mul(randomNumber)
@@ -134,7 +134,7 @@ contract('Sanity Tests', function(accounts) {
   })
   
   it('should match solidity implementation (libScalarBaseMult)', async function() {
-    var randomNumber = Math.floor(Math.random() * 1000)
+    var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
     var ecurveP = ec.curve.g.mul(randomNumber)
@@ -143,8 +143,8 @@ contract('Sanity Tests', function(accounts) {
   })
   
   it('should match solidity implementation (libPointAdd)', async function() {
-    var randomNumber = Math.floor(Math.random() * 1000)
-    var randomNumber2 = Math.floor(Math.random() * 1000)
+    var randomNumber = Math.ceil(Math.random() * 1000)
+    var randomNumber2 = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
     var solidityP2 = await instance.libScalarBaseMult(randomNumber2)
@@ -157,8 +157,8 @@ contract('Sanity Tests', function(accounts) {
   })
   
   it('should match solidity implementation (libScalarMult)', async function() {
-    var randomNumber = Math.floor(Math.random() * 1000)
-    var randomNumber2 = Math.floor(Math.random() * 1000)
+    var randomNumber = Math.ceil(Math.random() * 1000)
+    var randomNumber2 = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
     var ecurveP = ec.curve.g.mul(randomNumber)
@@ -169,7 +169,7 @@ contract('Sanity Tests', function(accounts) {
   })
   
   it('should match solidity implementation (baseScalarMult)', async function() {
-    var randomNumber = Math.floor(Math.random() * 1000)
+    var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
     var ecurveP = ec.curve.g.mul(randomNumber)

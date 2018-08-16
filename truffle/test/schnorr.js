@@ -21,10 +21,16 @@ function random(bytes){
 contract('Schnorr Tests', function(accounts) {
   
   it('should sign and verify', async function() {
+    // generate
+    var m = "this is a random message"
     var priv = random(32)
+    var y = ec.curve.g.mul(priv)
     var k = random(32)
-    // generate R = g^k
     var R = ec.curve.g.mul(k)
+    var r = keccak256(m + R.getX().toString())
+    var s = k.sub(priv.mul(new BN(r, 16)))
+    // verify
+    assert.equal(r, keccak256(m + y.mul(new BN(r, 16)).add(ec.curve.g.mul(s)).getX().toString()))
   })
 
 
