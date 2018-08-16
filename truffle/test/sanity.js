@@ -1,7 +1,7 @@
 var bitcore = require('bitcore-lib')
 var ecurve = require('ecurve-altbn128')
-var EC = require('ec-altbn128').ec
-var ec = new EC('altbn128')
+var elliptic = require('ec-altbn128').ec
+var ec = new elliptic('altbn128')
 var ECIES = require('bitcore-ecies')()
 var BN = require('bn.js')
 var BigInteger = require('bigi')
