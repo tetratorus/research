@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-import {Schnorr} from './Schnorr.sol';
+import {EC} from './EC.sol';
 
 contract Repository {
 

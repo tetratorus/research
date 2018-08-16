@@ -2,8 +2,8 @@ var HDWalletProvider = require("truffle-hdwallet-provider");
 var NonceTrackerSubprovider = require("web3-provider-engine/subproviders/nonce-tracker")
 var secrets = require('../secrets.json')
 
-var infura_apikey = secrets.infura_apikey;
-var mnemonic = secrets.mnemonic;
+var infura_apikey = secrets.infura_apikey
+var mnemonic = secrets.mnemonic
 
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
@@ -34,4 +34,4 @@ module.exports = {
       gasPrice: 5000000000,
     }
   }
-};
+}
