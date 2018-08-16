@@ -75,7 +75,7 @@ contract('Schnorr Tests', function(accounts) {
 
     // blind commitment
     var rprime = r.add(ec.curve.g.mul(alpha)).add(y.mul(beta))
-    var eprime = (new BN(keccak256(m + rprime.getX().toString()), 16)).umod(ec.curve.n)
+    var eprime = new BN(keccak256(m + rprime.getX().toString()), 16)
     var e = eprime.sub(beta).umod(ec.curve.n)
 
     // sign
@@ -121,6 +121,8 @@ contract('Schnorr Tests', function(accounts) {
     assert.equal(res3, true)
 
   })
+
+  
 
   // it should encrypt blinding params
   // it should decrypt blinding params
