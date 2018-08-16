@@ -124,7 +124,28 @@ library altbn128 {
         uint256 y = 0;
 
         // XXX: Gen Order (n) or Field Order (p) ?
-        uint256 x = uint256(s) % GEN_ORDER;
+        // Using FIELD_ORDER seems to match elliptic's implementation
+        uint256 x = uint256(s) % FIELD_ORDER;
+
+        while( true ) {
+            (beta, y) = findYforX(x);
+
+            // y^2 == beta
+            if(beta == mulmod(y, y, FIELD_ORDER)) {
+                return Point(x, y);
+            }
+
+            x = addmod(x, 1, FIELD_ORDER);
+        }
+    }
+
+    function uintToPoint(uint x) internal view returns (Point) {
+        uint256 beta = 0;
+        uint256 y = 0;
+
+        // XXX: Gen Order (n) or Field Order (p) ?
+        // Using FIELD_ORDER seems to match elliptic's implementation
+        x = x % FIELD_ORDER;
 
         while( true ) {
             (beta, y) = findYforX(x);

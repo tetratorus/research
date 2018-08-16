@@ -39,6 +39,11 @@ contract EC {
     return (res.X, res.Y);
   }
 
+  function libUintToPoint(uint256 x) public view returns (uint256, uint256) {
+    Curve.Point memory res = Curve.uintToPoint(x);
+    return (res.X, res.Y);
+  }
+
   function libFindYforX(uint256 x) public view returns (uint256, uint256) {
     return Curve.findYforX(x);
   }

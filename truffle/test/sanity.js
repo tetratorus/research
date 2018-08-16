@@ -4,6 +4,7 @@ var ec = new elliptic('altbn128')
 var ECIES = require('bitcore-ecies')()
 var BN = require('bn.js')
 var EC = artifacts.require('EC')
+var createKeccakHash = require('keccak')
 
 contract('Sanity Tests', function(accounts) {
   it('should encrypt and decrypt data', function() {
@@ -61,9 +62,24 @@ contract('Sanity Tests', function(accounts) {
     assert.equal(solidityP[1].toString(16), ecurveP.getY().toString(16))
   })
   
-  // // it('should match solidity implementation (libHashToPoint)', async function() {
-  // //   // TODO
-  // // })
+  it('should match solidity implementation (libUintToPoint)', async function() {
+    var ecBNToPoint = function(bn) {
+      return ec.curve.pointFromX(bn)
+    }
+
+    var keccak256 = function(inp) {
+      return createKeccakHash('keccak256').update(inp.toString()).digest('hex')
+    }
+
+    var hash = keccak256("this is a random message")
+
+    var hashNum = new BN(hash, 16)
+    var ecurveP = ecBNToPoint(hashNum)
+    var instance = await EC.deployed()
+    var solidityP = await instance.libUintToPoint('0x' + hashNum.toString(16))
+    assert.equal(ecurveP.getX().toString(16), solidityP[0].toString(16))
+    assert.equal(ecurveP.getY().toString(16), solidityP[1].toString(16))
+  })
 
   it('should match solidity implementation (libEqual)', async function() {
 
