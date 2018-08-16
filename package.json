@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/tetratorus/torusprotocol#readme",
   "dependencies": {
+    "bigi": "^1.4.2",
     "bitcore-ecies": "^1.0.3",
     "ec-altbn128": "^6.4.1",
     "elliptic": "^6.4.1",

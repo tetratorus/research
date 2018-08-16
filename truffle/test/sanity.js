@@ -1,10 +1,8 @@
 var bitcore = require('bitcore-lib')
-var ecurve = require('ecurve-altbn128')
 var elliptic = require('ec-altbn128').ec
 var ec = new elliptic('altbn128')
 var ECIES = require('bitcore-ecies')()
 var BN = require('bn.js')
-var BigInteger = require('bigi')
 var EC = artifacts.require('EC')
 
 contract('Sanity Tests', function(accounts) {
