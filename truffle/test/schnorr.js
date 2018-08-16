@@ -122,9 +122,6 @@ contract('Schnorr Tests', function(accounts) {
 
   })
 
-  // it should blind schnorr verify on-chain
-  // it should deblind and schnorr verify
-  // it should deblind and schnorr verify on-chain
   // it should encrypt blinding params
   // it should decrypt blinding params
   // it should allow source-expert simulated flow
