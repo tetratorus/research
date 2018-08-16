@@ -22,7 +22,7 @@ contract('Schnorr Tests', function(accounts) {
   
   it('should sign and verify', function() {
     // generate
-    var m = "911"
+    var m = "this is a random message"
     var priv = random(32)
     var privC = ec.curve.n.sub(priv).umod(ec.curve.n) // note: inverse is using n
     var y = ec.curve.g.mul(privC)
@@ -37,7 +37,7 @@ contract('Schnorr Tests', function(accounts) {
 
   it('should sign and verify on-chain', async function() {
     // generate
-    var m = "911"
+    var m = "this is a random message"
     var priv = random(32)
     var privC = ec.curve.n.sub(priv).umod(ec.curve.n) // note: inverse is using n
     var y = ec.curve.g.mul(privC)
@@ -51,7 +51,7 @@ contract('Schnorr Tests', function(accounts) {
     var res = await instance.verifySchnorrSignature(
       '0x'+y.getX().toString(16, 64),
       '0x'+y.getY().toString(16, 64),
-      911,
+      m,
       '0x'+e.toString(16, 64),
       '0x'+s.toString(16, 64)
     )

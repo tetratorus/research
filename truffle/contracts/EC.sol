@@ -92,9 +92,9 @@ contract EC {
     str = string(s);
   }
 
-  function verifySchnorrSignature(uint256 pubX, uint256 pubY, uint256 message, uint256 challenge, uint256 proof) view public returns (bool) {
+  function verifySchnorrSignature(uint256 pubX, uint256 pubY, string message, uint256 challenge, uint256 proof) view public returns (bool) {
     Curve.Point memory sum = Curve.pointAdd(Curve.Point({X: pubX, Y: pubY}).scalarMult(challenge), Curve.scalarBaseMult(proof)); // y^e*g^s = r
     uint256 projection = sum.X % Curve.genOrder();
-    return (challenge == uint256(keccak256(abi.encodePacked(uintToString(message),uintToString(projection))))); // e = H(m, r)
+    return (challenge == uint256(keccak256(abi.encodePacked(message,uintToString(projection))))); // e = H(m, r)
   }
 }
