@@ -58,5 +58,16 @@ contract('Schnorr Tests', function(accounts) {
     assert.equal(res, true)
   })
 
+  // it should blind schnorr sign
+  // it should blind schnorr verify
+  // it should blind schnorr verify on-chain
+  // it should deblind and schnorr verify
+  // it should deblind and schnorr verify on-chain
+  // it should encrypt blinding params
+  // it should decrypt blinding params
+  // it should allow source-expert simulated flow
+  // it should ring sign?
+  // it should schnorr ring sign?
+  // it should designated verifier extend...?
 
 })
