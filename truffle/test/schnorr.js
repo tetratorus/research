@@ -124,19 +124,31 @@ contract('Schnorr Tests', function(accounts) {
 
   it('should schnorr ring sign and verify between two parties', function() {
     // generate params, where signer has index 0
-    var priv0 = random(32)
-    var priv0Inv = ec.curve.n.sub(priv0).umod(ec.curve.n)
-    var y0 = ec.curve.g.mul(priv0Inv)
-    var priv1 = random(32)
-    var priv1Inv = ec.curve.n.sub(priv1).umod(ec.curve.n)
-    var y1 = ec.curve.g.mul(priv1Inv)
-    var a0 = random(32)
-    var a1 = random(32)
-    var R1 = ec.curve.g.mul(a1)
-    var m = "this is a random message"
-    var hmr1 = keccak256(m + R1.getX().toString())
-    var hmr1Inv = ec.curve.n.sub(new BN(hmr1, 16)).umod(ec.curve.n)
-    var R0 = ec.curve.g.mul(a0).add(y1.mul(new BN(hmr1, 16)))
+    var loop = true
+    while (loop) {
+      var priv0 = random(32)
+      var priv0Inv = ec.curve.n.sub(priv0).umod(ec.curve.n)
+      var y0 = ec.curve.g.mul(priv0Inv)
+      var priv1 = random(32)
+      while (priv1.eq(priv0)) {
+        priv1 = random(32)
+      }
+      var priv1Inv = ec.curve.n.sub(priv1).umod(ec.curve.n)
+      var y1 = ec.curve.g.mul(priv1Inv)
+      var a0 = random(32)
+      var a1 = random(32)
+      while (a1.eq(a0)) {
+        a1 = random(32)
+      }
+      var R1 = ec.curve.g.mul(a1)
+      var m = "this is a random message"
+      var hmr1 = keccak256(m + R1.getX().toString())
+      var hmr1Inv = ec.curve.n.sub(new BN(hmr1, 16)).umod(ec.curve.n)
+      var R0 = ec.curve.g.mul(a0).add(y1.mul(new BN(hmr1, 16)))
+      if (R0.getX().toString() !== "1" && R0.getX().toString() !== R1.getX().toString()) {
+        loop = false
+      }
+    }
     assert.equal(R0.getX().toString(16, 64), ec.curve.g.mul(a0).add(ec.curve.g.mul(priv1.mul(hmr1Inv))).getX().toString(16, 64))
 
     // generate sigma
@@ -150,10 +162,11 @@ contract('Schnorr Tests', function(accounts) {
     assert.equal(lhs.getX().toString(16, 64), rhs.getX().toString(16, 64))
   })
 
+  // it should schnorr ring sign multiple parties and verify
+  // it should schnorr ring sign multiple parties and verify on-chain
   // it should encrypt blinding params
   // it should decrypt blinding params
   // it should allow source-expert simulated flow
-  // it should ring sign?
   // it should designated verifier extend...?
 
 })
