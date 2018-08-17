@@ -61,10 +61,41 @@ contract('Sanity Tests', function(accounts) {
     assert.equal(solidityP[0].toString(16), ecurveP.getX().toString(16))
     assert.equal(solidityP[1].toString(16), ecurveP.getY().toString(16))
   })
+
+  it('should match solidity implementation (libHashToPoint)', async function() {
+    var ecBNToPoint = function(bn) {
+      while (true) {
+        try {
+          return ec.curve.pointFromX(bn)
+        } catch (e) {
+          bn = bn.add(new BN(1))
+        }
+      } 
+    }
+
+    var keccak256 = function(inp) {
+      return createKeccakHash('keccak256').update(inp.toString()).digest('hex')
+    }
+
+    var hash = keccak256("this is a random message")
+
+    var hashNum = new BN(hash, 16)
+    var ecurveP = ecBNToPoint(hashNum)
+    var instance = await EC.deployed()
+    var solidityP = await instance.libHashToPoint('0x' + hashNum.toString(16))
+    assert.equal(ecurveP.getX().toString(16), solidityP[0].toString(16))
+    assert.equal(ecurveP.getY().toString(16), solidityP[1].toString(16))
+  })
   
   it('should match solidity implementation (libUintToPoint)', async function() {
     var ecBNToPoint = function(bn) {
-      return ec.curve.pointFromX(bn)
+      while (true) {
+        try {
+          return ec.curve.pointFromX(bn)
+        } catch (e) {
+          bn = bn.add(new BN(1))
+        }
+      } 
     }
 
     var keccak256 = function(inp) {
