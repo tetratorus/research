@@ -111,4 +111,11 @@ contract('Schnorr Tests', function(accounts) {
 
   })
 
+  
+  // it should schnorr ring sign multiple parties and verify on-chain
+  // it should encrypt blinding params
+  // it should decrypt blinding params
+  // it should allow source-expert simulated flow
+  // it should designated verifier extend...?
+
 })

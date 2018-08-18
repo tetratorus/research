@@ -9,6 +9,7 @@ var crypto = require('crypto')
 var keccak256 = require('../../utils/keccak256.js');
 var random = require('../../utils/random.js')(ec);
 var schnorr = require('../../src/schnorr.js');
+var schnorrRingSig = require('../../src/schnorrRingSignature.js');
 
 var getPointFromX = function(x) {
   while (true) {
@@ -54,6 +55,33 @@ contract('Ring Tests', function(accounts) {
     // verify
     var lhs = ec.curve.g.mul(sigma)
     var rhs = R0.add(R1).add(y0.mul(hmr0Inv)).add(y1.mul(hmr1Inv))
+    assert.equal(lhs.getX().toString(16, 64), rhs.getX().toString(16, 64))
+  })
+
+  it("should schnorr ring sign multiple parties and verify", function () {
+    var priv0 = random(32) // generate secret
+    var priv0Inv = ec.curve.n.sub(priv0).umod(ec.curve.n)
+    var y0 = ec.curve.g.mul(priv0Inv) // y = g^-x, note: always use this form
+    var y1 = getPointFromX(random(32)) // generate other signer whose secret we don't know
+
+    // var keys = schnorrRingSig.randomKeys(5);
+    // var pubK = [];
+    // keys.forEach(value => pubK.push(value.pubK));
+    // var keyPair = keys[0];
+
+    var pubK =[y0,y1]; 
+    // var signature = schnorrRingSig.sign(pubK, keyPair, "heyoyoyoyoyo");
+    var signature = schnorrRingSig.sign(pubK, {privK:priv0, pubK:y0}, "heyoyoyoyoyo");
+
+    // verify
+    var lhs = ec.curve.g.mul(signature.sigma)
+    var rhs = signature.R[0];
+    for (var i = 1; i < signature.R.length; i ++) {
+      rhs = rhs.add(signature.R[i]);
+    }
+    for (var i = 0; i < signature.R.length; i++) {
+      rhs = rhs.add(pubK[i].mul(ec.curve.n.sub(new BN(signature.h[i], 16)).umod(ec.curve.n)));
+    }
     assert.equal(lhs.getX().toString(16, 64), rhs.getX().toString(16, 64))
   })
 
