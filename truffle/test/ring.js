@@ -110,7 +110,8 @@ contract('Ring Tests', function(accounts) {
     var sInv = ec.curve.n.sub(s).umod(ec.curve.n)
     assert(schnorr.verify(s, e, ySource, "this is a random message"))
 
-    // delete secrets to be sure that they are not used later in generated the DV signature
+    // delete secrets to be sure that they are not used later in generating the DV signature
+    k = null
     privSource = null
     privSourceInv = null
     var gsInv = ec.curve.g.mul(sInv)
@@ -154,13 +155,37 @@ contract('Ring Tests', function(accounts) {
     // verify
     var lhs = ec.curve.g.mul(sigma)
     var rhs = R0.add(R1).add(gsInv.mul(hmr0Inv)).add(yReader.mul(hmr1Inv))
+    // verify ring sig
     assert.equal(lhs.getX().toString(16, 64), rhs.getX().toString(16, 64))
     var gs = gsInv.mul((new BN(-1)).umod(ec.curve.n))
+    // verify underlying message is a valid signature
     assert.equal(gs.add(ySource.mul(new BN(keccak256(m + r.getX().toString()), 16))).getX().toString(16, 64), r.getX().toString(16, 64))
 
   })
 
-  // it should forge a designated verifier signature and verify
+  // it('should forge a designated verifier signature and verify', function() {
+  //   // generate params for underlying message
+  //   var k = random(32)
+  //   var r = ec.curve.g.mul(k)
+  //   var privSource = random(32)
+  //   var privSourceInv = ec.curve.n.sub(privSource).umod(ec.curve.n)
+  //   var ySource = ec.curve.g.mul(privSourceInv) // y = g^-x
+  //   var schnorrSig = schnorr.sign("this is a random message", privSource, k)
+  //   var e = schnorrSig.e
+  //   var s = schnorrSig.s
+  //   var sInv = ec.curve.n.sub(s).umod(ec.curve.n)
+  //   assert(schnorr.verify(s, e, ySource, "this is a random message"))
+  //   var gsInv = ec.curve.g.mul(sInv)
+
+  //   // remove params that the reader shouldnt have
+  //   k = null
+  //   privSource = null
+  //   privSourceInv = null
+  //   s = null
+  //   sInv = null
+  // })
+
+  // it should validate form of underlying message signature
   // it should designated verifier extend a signed message and verify on-chain
   // it should schnorr ring sign multiple parties and verify
   // it should verify schnorr ring signatures on-chain
