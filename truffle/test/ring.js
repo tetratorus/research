@@ -75,7 +75,8 @@ contract('Ring Tests', function(accounts) {
     for (var i = 0; i < signature.R.length; i++) {
       rhs = rhs.add(pubK[i].mul(ec.curve.n.sub(new BN(signature.h[i], 16)).umod(ec.curve.n)));
     }
-    assert.equal(lhs.getX().toString(16, 64), rhs.getX().toString(16, 64))
+    assert.equal(schnorrRingSig.verify(signature.m, signature.R, signature.h, pubK, signature.sigma), lhs.getX().toString(16, 64) === rhs.getX().toString(16, 64))
+
   })
 
   it('should unique ring sign and verify between two parties', function() {
