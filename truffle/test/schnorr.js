@@ -18,7 +18,8 @@ contract('Schnorr Tests', function(accounts) {
     var priv = random(32)
     var privC = ec.curve.n.sub(priv).umod(ec.curve.n) // note: inverse is using n
     var y = ec.curve.g.mul(privC)
-    var schnorrSig = schnorr.sign(m, priv);
+    var k = random(32)
+    var schnorrSig = schnorr.sign(m, priv, k);
     
     // verify
     assert(schnorr.verify(schnorrSig.s, schnorrSig.e, y, m));
@@ -31,7 +32,8 @@ contract('Schnorr Tests', function(accounts) {
 
     var privC = ec.curve.n.sub(priv).umod(ec.curve.n) // note: inverse is using n
     var y = ec.curve.g.mul(privC)
-    var schnorrSig = schnorr.sign(m, priv);
+    var k = random(32)
+    var schnorrSig = schnorr.sign(m, priv, k);
 
     // verify
     var instance = await EC.deployed()

@@ -7,10 +7,9 @@ var keccak256 = require('../utils/keccak256.js');
 var random = require('../utils/random.js')(ec);
 
 var schnorr = {};
-schnorr.sign = function(m, priv) {
+schnorr.sign = function(m, priv, k) {
   var privC = ec.curve.n.sub(priv).umod(ec.curve.n) // note: inverse is using n
   var y = ec.curve.g.mul(privC);
-  var k = random(32);
   var r = ec.curve.g.mul(k);
   var e = keccak256(m + r.getX().toString());
   var s = k.add(priv.mul(new BN(e, 16))).umod(ec.curve.n);
