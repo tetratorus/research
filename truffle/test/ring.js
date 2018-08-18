@@ -65,20 +65,18 @@ contract('Ring Tests', function(accounts) {
   it('should unique ring sign and verify between two parties', function() {
     // https://fc13.ifca.ai/proc/5-1.pdf
     // generate params
-    var m = "this is a random message"
-    var priv0 = random(32)
-    var priv0Inv = ec.curve.n.sub(priv0).umod(ec.curve.n)
-    var y0 = ec.curve.g.mul(priv0Inv)
-    var priv1 = random(32)
-    var priv1Inv = ec.curve.n.sub(priv1).umod(ec.curve.n)
-    var y1 = ec.curve.g.mul(priv1Inv)
-    var R = []
+    var m = "this is a random message" // message
+    var priv0 = random(32) // signer secret
+    var priv0Inv = ec.curve.n.sub(priv0).umod(ec.curve.n) // inverse of secret = -x
+    var y0 = ec.curve.g.mul(priv0Inv) // note: y = g^-x,
+    do {
+      // create other signer public key, whose secret we don't know
+      var y1 = getPointFromX(random(32)) // note: the getX() value of this might not = x, if invalid point
+    } while (y1.eq(y0))
+    var R = [] // list of signers
     R.push([y0.getX().toString(), y0.getY().toString()])
     R.push([y1.getX().toString(), y1.getY().toString()])
-    var priv1 = random(32)
-    while (priv1.eq(priv0)) {
-      priv1 = random(32)
-    }
+    // generate params for other signer
     var c1 = random(32)
     var c1Inv = ec.curve.n.sub(c1).umod(ec.curve.n)
     var t1 = random(32)
@@ -86,6 +84,7 @@ contract('Ring Tests', function(accounts) {
     var hmr = keccak256(m + R[0][0] + R[0][1] + R[1][0] + R[1][1])
     var hmrP = getPointFromX(new BN(hmr, 16))
     var b1 = hmrP.mul(t1).add(hmrP.mul(priv0).mul(c1))
+    // generate params for signer
     var r0 = random(32)
     var a0 = ec.curve.g.mul(r0)
     var b0 = hmrP.mul(r0)
