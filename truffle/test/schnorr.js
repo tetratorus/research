@@ -1,39 +1,36 @@
-var bitcore = require('bitcore-lib')
-var elliptic = require('ec-altbn128').ec
-var ec = new elliptic('altbn128')
-var ECIES = require('bitcore-ecies')()
+/* global assert, contract, artifacts, it */
+var Elliptic = require('ec-altbn128').ec
+var ec = new Elliptic('altbn128')
 var BN = require('bn.js')
 var EC = artifacts.require('EC')
-var crypto = require('crypto')
 
-var keccak256 = require('../../utils/keccak256.js');
-var random = require('../../utils/random.js')(ec);
-var schnorr = require('../../src/schnorr.js');
+var keccak256 = require('../../utils/keccak256.js')
+var random = require('../../utils/random.js')(ec)
+var schnorr = require('../../src/schnorr.js')
 
-contract('Schnorr Tests', function(accounts) {
-  
-  it('should sign and verify', function() {
+contract('Schnorr Tests', function (accounts) {
+  it('should sign and verify', function () {
     // generate
-    var m = "this is a random message"
+    var m = 'this is a random message'
     var priv = random(32)
     var privC = ec.curve.n.sub(priv).umod(ec.curve.n) // note: inverse is using n
     var y = ec.curve.g.mul(privC)
     var k = random(32)
-    var schnorrSig = schnorr.sign(m, priv, k);
-    
+    var schnorrSig = schnorr.sign(m, priv, k)
+
     // verify
-    assert(schnorr.verify(schnorrSig.s, schnorrSig.e, y, m));
+    assert(schnorr.verify(schnorrSig.s, schnorrSig.e, y, m))
   })
-  
-  it('should sign and verify on-chain', async function() {
+
+  it('should sign and verify on-chain', async function () {
     // generate
-    var m = "this is a random message"
+    var m = 'this is a random message'
     var priv = random(32)
 
     var privC = ec.curve.n.sub(priv).umod(ec.curve.n) // note: inverse is using n
     var y = ec.curve.g.mul(privC)
     var k = random(32)
-    var schnorrSig = schnorr.sign(m, priv, k);
+    var schnorrSig = schnorr.sign(m, priv, k)
 
     // verify
     var instance = await EC.deployed()
@@ -41,15 +38,15 @@ contract('Schnorr Tests', function(accounts) {
       '0x' + y.getX().toString(16, 64),
       '0x' + y.getY().toString(16, 64),
       m,
-      '0x'+schnorrSig.e.toString(16, 64),
-      '0x'+schnorrSig.s.toString(16, 64)
+      '0x' + schnorrSig.e.toString(16, 64),
+      '0x' + schnorrSig.s.toString(16, 64)
     )
     assert.equal(res, true)
   })
 
-  it('should blind schnorr sign and verify on-chain', async function() {
+  it('should blind schnorr sign and verify on-chain', async function () {
     // generate params
-    var m = "this is a random message"
+    var m = 'this is a random message'
     var priv = random(32)
     var privInv = ec.curve.n.sub(priv).umod(ec.curve.n)
     var y = ec.curve.g.mul(privInv)
@@ -83,9 +80,9 @@ contract('Schnorr Tests', function(accounts) {
       '0x' + s.toString(16, 64)
     )
     assert.equal(res, true)
-  
+
     // deblind
-    sprime = s.add(alpha).umod(ec.curve.n)
+    var sprime = s.add(alpha).umod(ec.curve.n)
 
     // verify deblinded schnorr
     assert.equal(ec.curve.g.mul(sprime).add(y.mul(eprime)).getX().toString(16, 64), rprime.getX().toString(16, 64))
@@ -108,14 +105,11 @@ contract('Schnorr Tests', function(accounts) {
       '0x' + sprime.toString(16, 64)
     )
     assert.equal(res3, true)
-
   })
 
-  
   // it should schnorr ring sign multiple parties and verify on-chain
   // it should encrypt blinding params
   // it should decrypt blinding params
   // it should allow source-expert simulated flow
   // it should designated verifier extend...?
-
 })

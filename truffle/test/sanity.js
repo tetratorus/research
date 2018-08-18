@@ -1,57 +1,56 @@
+/* global assert, contract, artifacts, it */
 var bitcore = require('bitcore-lib')
-var elliptic = require('ec-altbn128').ec
-var ec = new elliptic('altbn128')
+var Elliptic = require('ec-altbn128').ec
+var ec = new Elliptic('altbn128')
 var ECIES = require('bitcore-ecies')()
 var BN = require('bn.js')
 var EC = artifacts.require('EC')
 var createKeccakHash = require('keccak')
 
-contract('Sanity Tests', function(accounts) {
-  it('should encrypt and decrypt data', function() {
-    
+contract('Sanity Tests', function (accounts) {
+  it('should encrypt and decrypt data', function () {
     var alicePrivateKey = new bitcore.PrivateKey('10274ACD1126740A07688CE5C8FEB13EC298413781B2B8565948A82F7A1E42D4')
     var bobPrivateKey = new bitcore.PrivateKey('55AF2C88EAC3F5B97DBD916C0477C86DE36C6B3C34AA1662840B24ECD93FD42A')
-    var data = new Buffer.from('The is a raw data example')
-    
+    var data = Buffer.from('The is a raw data example')
+
     // Encrypt data
     var cypher1 = ECIES.privateKey(alicePrivateKey).publicKey(bobPrivateKey.publicKey)
     var encrypted = cypher1.encrypt(data)
-    
+
     // Decrypt data
     var cypher2 = ECIES.privateKey(bobPrivateKey).publicKey(alicePrivateKey.publicKey)
     var decrypted = cypher2.decrypt(encrypted)
-    
+
     assert.equal(data.toString(), decrypted.toString())
   })
 
-  it('should convert integer to string', async function() {
+  it('should convert integer to string', async function () {
     var instance = await EC.deployed()
     var res = await instance.uintToString(25)
     assert.equal('25', res)
     return true
   })
-  
-  
-  it('should match solidity implementation (libGenOrder)', async function() {
+
+  it('should match solidity implementation (libGenOrder)', async function () {
     var instance = await EC.deployed()
     var solidityRes = await instance.libGenOrder()
     assert.equal(solidityRes.toString(16), ec.curve.n.toString(16))
   })
-  
-  it('should match solidity implementation (libFieldOrder)', async function() {
+
+  it('should match solidity implementation (libFieldOrder)', async function () {
     var instance = await EC.deployed()
     var solidityRes = await instance.libFieldOrder()
     assert.equal(solidityRes.toString(16), ec.curve.p.toString(16))
   })
-  
-  it('should match solidity implementation (libGenerator)', async function() {
+
+  it('should match solidity implementation (libGenerator)', async function () {
     var instance = await EC.deployed()
     var solidityP = await instance.libGenerator()
     assert.equal(solidityP[0].toString(16), ec.curve.g.getX().toString(16))
     assert.equal(solidityP[1].toString(16), ec.curve.g.getY().toString(16))
   })
-  
-  it('should match solidity implementation (libNegate)', async function() {
+
+  it('should match solidity implementation (libNegate)', async function () {
     var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
@@ -62,22 +61,22 @@ contract('Sanity Tests', function(accounts) {
     assert.equal(solidityP[1].toString(16), ecurveP.getY().toString(16))
   })
 
-  it('should match solidity implementation (libHashToPoint)', async function() {
-    var ecBNToPoint = function(bn) {
+  it('should match solidity implementation (libHashToPoint)', async function () {
+    var ecBNToPoint = function (bn) {
       while (true) {
         try {
           return ec.curve.pointFromX(bn)
         } catch (e) {
           bn = bn.add(new BN(1))
         }
-      } 
+      }
     }
 
-    var keccak256 = function(inp) {
+    var keccak256 = function (inp) {
       return createKeccakHash('keccak256').update(inp.toString()).digest('hex')
     }
 
-    var hash = keccak256("this is a random message")
+    var hash = keccak256('this is a random message')
 
     var hashNum = new BN(hash, 16)
     var ecurveP = ecBNToPoint(hashNum)
@@ -86,23 +85,23 @@ contract('Sanity Tests', function(accounts) {
     assert.equal(ecurveP.getX().toString(16), solidityP[0].toString(16))
     assert.equal(ecurveP.getY().toString(16), solidityP[1].toString(16))
   })
-  
-  it('should match solidity implementation (libUintToPoint)', async function() {
-    var ecBNToPoint = function(bn) {
+
+  it('should match solidity implementation (libUintToPoint)', async function () {
+    var ecBNToPoint = function (bn) {
       while (true) {
         try {
           return ec.curve.pointFromX(bn)
         } catch (e) {
           bn = bn.add(new BN(1))
         }
-      } 
+      }
     }
 
-    var keccak256 = function(inp) {
+    var keccak256 = function (inp) {
       return createKeccakHash('keccak256').update(inp.toString()).digest('hex')
     }
 
-    var hash = keccak256("this is a random message")
+    var hash = keccak256('this is a random message')
 
     var hashNum = new BN(hash, 16)
     var ecurveP = ecBNToPoint(hashNum)
@@ -112,8 +111,7 @@ contract('Sanity Tests', function(accounts) {
     assert.equal(ecurveP.getY().toString(16), solidityP[1].toString(16))
   })
 
-  it('should match solidity implementation (libEqual)', async function() {
-
+  it('should match solidity implementation (libEqual)', async function () {
     var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
@@ -123,8 +121,7 @@ contract('Sanity Tests', function(accounts) {
     assert.equal(ecurveEqual, solidityEqual)
   })
 
-
-  it('should match solidity implementation (libFindYforX)', async function() {
+  it('should match solidity implementation (libFindYforX)', async function () {
     var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
@@ -140,8 +137,8 @@ contract('Sanity Tests', function(accounts) {
     }
     assert.equal(ecurveP2.getY().toString(16), solidityP2[1].toString(16))
   })
-  
-  it('should match solidity implementation (libIsInfinity)', async function() {
+
+  it('should match solidity implementation (libIsInfinity)', async function () {
     var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
@@ -153,8 +150,8 @@ contract('Sanity Tests', function(accounts) {
     var ecurveInf = ecurveP.add(ecurvePn)
     assert.equal(ecurveInf.isInfinity(), solidityIsInf)
   })
-  
-  it('should match solidity implementation (libIsOnCurve)', async function() {
+
+  it('should match solidity implementation (libIsOnCurve)', async function () {
     var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
@@ -163,8 +160,8 @@ contract('Sanity Tests', function(accounts) {
     var ecurveIsOnCurve = ec.curve.validate(ecurveP)
     assert.equal(ecurveIsOnCurve, solidityIsOnCurve)
   })
-  
-  it('should match solidity implementation (libScalarBaseMult)', async function() {
+
+  it('should match solidity implementation (libScalarBaseMult)', async function () {
     var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
@@ -172,8 +169,8 @@ contract('Sanity Tests', function(accounts) {
     assert.equal(solidityP[0].toString(16), ecurveP.getX().toString(16))
     assert.equal(solidityP[1].toString(16), ecurveP.getY().toString(16))
   })
-  
-  it('should match solidity implementation (libPointAdd)', async function() {
+
+  it('should match solidity implementation (libPointAdd)', async function () {
     var randomNumber = Math.ceil(Math.random() * 1000)
     var randomNumber2 = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
@@ -186,8 +183,8 @@ contract('Sanity Tests', function(accounts) {
     assert.equal(solidityR[0].toString(16), ecurveR.getX().toString(16))
     assert.equal(solidityR[1].toString(16), ecurveR.getY().toString(16))
   })
-  
-  it('should match solidity implementation (libScalarMult)', async function() {
+
+  it('should match solidity implementation (libScalarMult)', async function () {
     var randomNumber = Math.ceil(Math.random() * 1000)
     var randomNumber2 = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
@@ -198,8 +195,8 @@ contract('Sanity Tests', function(accounts) {
     assert.equal(solidityP2[0].toString(16), ecurveP2.getX().toString(16))
     assert.equal(solidityP2[1].toString(16), ecurveP2.getY().toString(16))
   })
-  
-  it('should match solidity implementation (baseScalarMult)', async function() {
+
+  it('should match solidity implementation (baseScalarMult)', async function () {
     var randomNumber = Math.ceil(Math.random() * 1000)
     var instance = await EC.deployed()
     var solidityP = await instance.libScalarBaseMult(randomNumber)
@@ -207,6 +204,4 @@ contract('Sanity Tests', function(accounts) {
     assert.equal(solidityP[0].toString(16), ecurveP.getX().toString(16))
     assert.equal(solidityP[1].toString(16), ecurveP.getY().toString(16))
   })
-
-
 })

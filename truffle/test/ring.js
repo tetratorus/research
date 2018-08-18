@@ -1,17 +1,13 @@
-var bitcore = require('bitcore-lib')
-var elliptic = require('ec-altbn128').ec
-var ec = new elliptic('altbn128')
-var ECIES = require('bitcore-ecies')()
+/* global assert, contract, it */
+var Elliptic = require('ec-altbn128').ec
+var ec = new Elliptic('altbn128')
 var BN = require('bn.js')
-var EC = artifacts.require('EC')
-var crypto = require('crypto')
 
-var keccak256 = require('../../utils/keccak256.js');
-var random = require('../../utils/random.js')(ec);
-var schnorr = require('../../src/schnorr.js');
-var schnorrRingSig = require('../../src/schnorrRingSignature.js');
+var keccak256 = require('../../utils/keccak256.js')
+var random = require('../../utils/random.js')(ec)
+var schnorr = require('../../src/schnorr.js')
 
-var getPointFromX = function(x) {
+var getPointFromX = function (x) {
   while (true) {
     try {
       return ec.curve.pointFromX(x)
@@ -21,9 +17,8 @@ var getPointFromX = function(x) {
   }
 }
 
-contract('Ring Tests', function(accounts) {
-  
-  it('should schnorr ring sign and verify between two parties', function() {
+contract('Ring Tests', function (accounts) {
+  it('should schnorr ring sign and verify between two parties', function () {
     // generate params, where signer has index 0
     var priv0 = random(32) // generate secret
     var priv0Inv = ec.curve.n.sub(priv0).umod(ec.curve.n)
@@ -37,11 +32,11 @@ contract('Ring Tests', function(accounts) {
         a1 = random(32)
       }
       var R1 = ec.curve.g.mul(a1)
-      var m = "this is a random message"
+      var m = 'this is a random message'
       var hmr1 = keccak256(m + R1.getX().toString())
       var hmr1Inv = ec.curve.n.sub(new BN(hmr1, 16)).umod(ec.curve.n)
       var R0 = ec.curve.g.mul(a0).add(y1.mul(new BN(hmr1, 16)))
-      if (R0.getX().toString() !== "1" && R0.getX().toString() !== R1.getX().toString()) {
+      if (R0.getX().toString() !== '1' && R0.getX().toString() !== R1.getX().toString()) {
         loop = false // make sure they are pairwise distinct
       }
     }
@@ -58,31 +53,10 @@ contract('Ring Tests', function(accounts) {
     assert.equal(lhs.getX().toString(16, 64), rhs.getX().toString(16, 64))
   })
 
-  it("should schnorr ring sign multiple parties and verify", function () {
-    var keys = schnorrRingSig.randomKeys(5);
-    var pubK = [];
-    keys.forEach(value => pubK.push(value.pubK));
-    var keyPair = keys[0];
-
-    var signature = schnorrRingSig.sign(pubK, keyPair, "heyoyoyoyoyo");
-
-    // verify
-    var lhs = ec.curve.g.mul(signature.sigma)
-    var rhs = signature.R[0];
-    for (var i = 1; i < signature.R.length; i ++) {
-      rhs = rhs.add(signature.R[i]);
-    }
-    for (var i = 0; i < signature.R.length; i++) {
-      rhs = rhs.add(pubK[i].mul(ec.curve.n.sub(new BN(signature.h[i], 16)).umod(ec.curve.n)));
-    }
-    assert.equal(schnorrRingSig.verify(signature.m, signature.R, signature.h, pubK, signature.sigma), lhs.getX().toString(16, 64) === rhs.getX().toString(16, 64))
-
-  })
-
-  it('should unique ring sign and verify between two parties', function() {
+  it('should unique ring sign and verify between two parties', function () {
     // https://fc13.ifca.ai/proc/5-1.pdf
     // generate params
-    var m = "this is a random message" // message
+    var m = 'this is a random message' // message
     var priv0 = random(32) // signer secret
     var priv0Inv = ec.curve.n.sub(priv0).umod(ec.curve.n) // inverse of secret = -x
     var y0 = ec.curve.g.mul(priv0Inv) // note: y = g^-x,
@@ -111,26 +85,26 @@ contract('Ring Tests', function(accounts) {
     var tau = hmrP.mul(priv0)
 
     // verify
-    assert.equal(c0.add(c1).toString(), (new BN(keccak256(m + R[0][0] + R[0][1] + R[1][0] + R[1][1]
-    + ec.curve.g.mul(t0).add(y0.mul(c0Inv)).getX().toString()
-    + getPointFromX(new BN(keccak256(m + R[0][0] + R[0][1] + R[1][0] + R[1][1]), 16)).mul(t0).add(tau.mul(c0)).getX().toString()
-    + ec.curve.g.mul(t1).add(y1.mul(c1Inv)).getX().toString()
-    + getPointFromX(new BN(keccak256(m + R[0][0] + R[0][1] + R[1][0] + R[1][1]), 16)).mul(t1).add(tau.mul(c1)).getX().toString()
+    assert.equal(c0.add(c1).toString(), (new BN(keccak256(m + R[0][0] + R[0][1] + R[1][0] + R[1][1] +
+    ec.curve.g.mul(t0).add(y0.mul(c0Inv)).getX().toString() +
+    getPointFromX(new BN(keccak256(m + R[0][0] + R[0][1] + R[1][0] + R[1][1]), 16)).mul(t0).add(tau.mul(c0)).getX().toString() +
+    ec.curve.g.mul(t1).add(y1.mul(c1Inv)).getX().toString() +
+    getPointFromX(new BN(keccak256(m + R[0][0] + R[0][1] + R[1][0] + R[1][1]), 16)).mul(t1).add(tau.mul(c1)).getX().toString()
     ), 16)).toString())
   })
 
-  it('should designated verifier extend a schnorr message signature and verify', function() {
+  it('should designated verifier extend a schnorr message signature and verify', function () {
     // generate params for underlying message
     var k = random(32)
     var r = ec.curve.g.mul(k)
     var privSource = random(32)
     var privSourceInv = ec.curve.n.sub(privSource).umod(ec.curve.n)
     var ySource = ec.curve.g.mul(privSourceInv) // y = g^-x
-    var schnorrSig = schnorr.sign("this is a random message", privSource, k)
+    var schnorrSig = schnorr.sign('this is a random message', privSource, k)
     var e = schnorrSig.e
     var s = schnorrSig.s
     var sInv = ec.curve.n.sub(s).umod(ec.curve.n)
-    assert(schnorr.verify(s, e, ySource, "this is a random message"))
+    assert(schnorr.verify(s, e, ySource, 'this is a random message'))
 
     // delete secrets to be sure that they are not used later in generating the DV signature
     k = null
@@ -141,12 +115,11 @@ contract('Ring Tests', function(accounts) {
     // generate params for reader (i.e. designated verifier)
     var yReader = getPointFromX(random(32)) // we don't know the reader's secret
 
-
     // designated verifier extension on underlying message
     // which is just a schnorr ring sig but over a g^s instead of g^x
 
     // generate params
-    var m = "this is a random message" // this is optional, we may want to use it for tagging
+    var m = 'this is a random message' // this is optional, we may want to use it for tagging
     var loop = true
     while (loop) {
       var a0 = random(32)
@@ -158,7 +131,7 @@ contract('Ring Tests', function(accounts) {
       var hmr1 = keccak256(m + R1.getX().toString())
       var hmr1Inv = ec.curve.n.sub(new BN(hmr1, 16)).umod(ec.curve.n)
       var R0 = ec.curve.g.mul(a0).add(yReader.mul(new BN(hmr1, 16)))
-      if (R0.getX().toString() !== "1" && R0.getX().toString() !== R1.getX().toString()) {
+      if (R0.getX().toString() !== '1' && R0.getX().toString() !== R1.getX().toString()) {
         loop = false // make sure they are pairwise distinct
       }
     }
@@ -172,7 +145,6 @@ contract('Ring Tests', function(accounts) {
     // only gsInv should be used
     s = null
     sInv = null
-    
 
     // verify
     var lhs = ec.curve.g.mul(sigma)
@@ -182,21 +154,20 @@ contract('Ring Tests', function(accounts) {
     var gs = gsInv.mul((new BN(-1)).umod(ec.curve.n))
     // verify underlying message is a valid signature
     assert.equal(gs.add(ySource.mul(new BN(keccak256(m + r.getX().toString()), 16))).getX().toString(16, 64), r.getX().toString(16, 64))
-
   })
 
-  it('should forge a designated verifier signature and verify', function() {
+  it('should forge a designated verifier signature and verify', function () {
     // generate params for underlying message
     var k = random(32)
     var r = ec.curve.g.mul(k)
     var privSource = random(32)
     var privSourceInv = ec.curve.n.sub(privSource).umod(ec.curve.n)
     var ySource = ec.curve.g.mul(privSourceInv) // y = g^-x
-    var schnorrSig = schnorr.sign("this is a random message", privSource, k)
+    var schnorrSig = schnorr.sign('this is a random message', privSource, k)
     var e = schnorrSig.e
     var s = schnorrSig.s
     var sInv = ec.curve.n.sub(s).umod(ec.curve.n)
-    assert(schnorr.verify(s, e, ySource, "this is a random message"))
+    assert(schnorr.verify(s, e, ySource, 'this is a random message'))
     var gsInv = ec.curve.g.mul(sInv)
 
     // remove params that the reader shouldnt have
@@ -212,7 +183,7 @@ contract('Ring Tests', function(accounts) {
     var yReader = ec.curve.g.mul(privReaderInv)
 
     // generate params
-    var m = "this is a random message" // this is optional, we may want to use it for tagging
+    var m = 'this is a random message' // this is optional, we may want to use it for tagging
     var loop = true
     while (loop) {
       var a0 = random(32)
@@ -224,7 +195,7 @@ contract('Ring Tests', function(accounts) {
       var hmr0 = keccak256(m + R0.getX().toString())
       var hmr0Inv = ec.curve.n.sub(new BN(hmr0, 16)).umod(ec.curve.n)
       var R1 = ec.curve.g.mul(a1).add(gsInv.mul(new BN(hmr0, 16)))
-      if (R1.getX().toString() !== "1" && R1.getX().toString() !== R0.getX().toString()) {
+      if (R1.getX().toString() !== '1' && R1.getX().toString() !== R0.getX().toString()) {
         loop = false // make sure they are pairwise distinct
       }
     }
@@ -237,7 +208,6 @@ contract('Ring Tests', function(accounts) {
     // remove privReader and privReaderInv to ensure that they aren't revealed later
     privReader = null
     privReaderInv = null
-    
 
     // verify
     var lhs = ec.curve.g.mul(sigma)
@@ -247,7 +217,6 @@ contract('Ring Tests', function(accounts) {
     var gs = gsInv.mul((new BN(-1)).umod(ec.curve.n))
     // verify underlying message is a valid signature
     assert.equal(gs.add(ySource.mul(new BN(keccak256(m + r.getX().toString()), 16))).getX().toString(16, 64), r.getX().toString(16, 64))
-
   })
 
   // it should validate form of underlying message signature
@@ -260,5 +229,4 @@ contract('Ring Tests', function(accounts) {
   // it should encrypt blinding params
   // it should decrypt blinding params
   // it should allow source-expert simulated flow..?
-
 })

@@ -1,5 +1,5 @@
-var createKeccakHash = require('keccak');
+var createKeccakHash = require('keccak')
 
-module.exports = function keccak256(inp){
+module.exports = function keccak256 (inp) {
   return createKeccakHash('keccak256').update(inp.toString()).digest('hex')
 }
