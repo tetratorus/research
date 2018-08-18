@@ -103,4 +103,29 @@ contract EC {
     uint256 projection = sum.X % Curve.genOrder();
     return (projection == r);
   }
+
+/*
+schnorrRingSignature.verify = function (m, R, h, pubK, sigma) {
+  var lhs = ec.curve.g.mul(sigma);
+  var rhs = R[0];
+  for (var i = 1; i < R.length; i ++) {
+    rhs = rhs.add(R[i]);
+  }
+  for (var i = 0; i < R.length; i++) {
+    rhs = rhs.add(pubK[i].mul(ec.curve.n.sub(new BN(h[i], 16)).umod(ec.curve.n)));
+  }
+  //verification sigma test
+  var firstTest = lhs.getX().toString(16, 64) === rhs.getX().toString(16, 64);
+  //check if all h = H(m+ R);
+  var secondTest = true;
+  for (var i = 0; i < R.length; i ++) {
+    if (h[i] !== keccak256(m + R[i].getX().toString())) secondTest = false;
+  }
+
+  return firstTest && secondTest;
+}
+*/
+  function verifySchnorrRingSignature() view public returns (bool) {
+    
+  }
 }
