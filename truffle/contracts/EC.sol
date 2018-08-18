@@ -125,7 +125,7 @@ schnorrRingSignature.verify = function (m, R, h, pubK, sigma) {
   return firstTest && secondTest;
 }
 */
-  function verifySchnorrRingSignature(string message ) view public returns (bool) {
-    
+  function verifySchnorrRingSignature(string message, uint256[] Rx, uint256[] Ry, bytes32[] h, uint256[] pubX, uint256[] pubY, uint256 sigma) view public returns (bool) {
+    Curve.Point memory lhs = Curve.scalarBaseMult(sigma);
   }
 }
