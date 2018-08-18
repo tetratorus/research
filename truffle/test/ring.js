@@ -163,27 +163,70 @@ contract('Ring Tests', function(accounts) {
 
   })
 
-  // it('should forge a designated verifier signature and verify', function() {
-  //   // generate params for underlying message
-  //   var k = random(32)
-  //   var r = ec.curve.g.mul(k)
-  //   var privSource = random(32)
-  //   var privSourceInv = ec.curve.n.sub(privSource).umod(ec.curve.n)
-  //   var ySource = ec.curve.g.mul(privSourceInv) // y = g^-x
-  //   var schnorrSig = schnorr.sign("this is a random message", privSource, k)
-  //   var e = schnorrSig.e
-  //   var s = schnorrSig.s
-  //   var sInv = ec.curve.n.sub(s).umod(ec.curve.n)
-  //   assert(schnorr.verify(s, e, ySource, "this is a random message"))
-  //   var gsInv = ec.curve.g.mul(sInv)
+  it('should forge a designated verifier signature and verify', function() {
+    // generate params for underlying message
+    var k = random(32)
+    var r = ec.curve.g.mul(k)
+    var privSource = random(32)
+    var privSourceInv = ec.curve.n.sub(privSource).umod(ec.curve.n)
+    var ySource = ec.curve.g.mul(privSourceInv) // y = g^-x
+    var schnorrSig = schnorr.sign("this is a random message", privSource, k)
+    var e = schnorrSig.e
+    var s = schnorrSig.s
+    var sInv = ec.curve.n.sub(s).umod(ec.curve.n)
+    assert(schnorr.verify(s, e, ySource, "this is a random message"))
+    var gsInv = ec.curve.g.mul(sInv)
 
-  //   // remove params that the reader shouldnt have
-  //   k = null
-  //   privSource = null
-  //   privSourceInv = null
-  //   s = null
-  //   sInv = null
-  // })
+    // remove params that the reader shouldnt have
+    k = null
+    privSource = null
+    privSourceInv = null
+    s = null
+    sInv = null
+
+    // generate params for reader
+    var privReader = random(32)
+    var privReaderInv = ec.curve.n.sub(privReader).umod(ec.curve.n)
+    var yReader = ec.curve.g.mul(privReaderInv)
+
+    // generate params
+    var m = "this is a random message" // this is optional, we may want to use it for tagging
+    var loop = true
+    while (loop) {
+      var a0 = random(32)
+      var a1 = random(32)
+      while (a1.eq(a0)) {
+        a1 = random(32)
+      }
+      var R0 = ec.curve.g.mul(a0)
+      var hmr0 = keccak256(m + R0.getX().toString())
+      var hmr0Inv = ec.curve.n.sub(new BN(hmr0, 16)).umod(ec.curve.n)
+      var R1 = ec.curve.g.mul(a1).add(gsInv.mul(new BN(hmr0, 16)))
+      if (R1.getX().toString() !== "1" && R1.getX().toString() !== R0.getX().toString()) {
+        loop = false // make sure they are pairwise distinct
+      }
+    }
+
+    // calculate sigma
+    var hmr1 = keccak256(m + R1.getX().toString())
+    var hmr1Inv = ec.curve.n.sub(new BN(hmr1, 16)).umod(ec.curve.n)
+    var sigma = a0.add(a1).add(privReader.mul(new BN(hmr1, 16)))
+
+    // remove privReader and privReaderInv to ensure that they aren't revealed later
+    privReader = null
+    privReaderInv = null
+    
+
+    // verify
+    var lhs = ec.curve.g.mul(sigma)
+    var rhs = R0.add(R1).add(gsInv.mul(hmr0Inv)).add(yReader.mul(hmr1Inv))
+    // verify ring sig
+    assert.equal(lhs.getX().toString(16, 64), rhs.getX().toString(16, 64))
+    var gs = gsInv.mul((new BN(-1)).umod(ec.curve.n))
+    // verify underlying message is a valid signature
+    assert.equal(gs.add(ySource.mul(new BN(keccak256(m + r.getX().toString()), 16))).getX().toString(16, 64), r.getX().toString(16, 64))
+
+  })
 
   // it should validate form of underlying message signature
   // it should designated verifier extend a signed message and verify on-chain
