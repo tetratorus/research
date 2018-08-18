@@ -125,7 +125,7 @@ schnorrRingSignature.verify = function (m, R, h, pubK, sigma) {
   return firstTest && secondTest;
 }
 */
-  function verifySchnorrRingSignature() view public returns (bool) {
+  function verifySchnorrRingSignature(string message ) view public returns (bool) {
     
   }
 }
