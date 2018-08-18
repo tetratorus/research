@@ -59,19 +59,12 @@ contract('Ring Tests', function(accounts) {
   })
 
   it("should schnorr ring sign multiple parties and verify", function () {
-    var priv0 = random(32) // generate secret
-    var priv0Inv = ec.curve.n.sub(priv0).umod(ec.curve.n)
-    var y0 = ec.curve.g.mul(priv0Inv) // y = g^-x, note: always use this form
-    var y1 = getPointFromX(random(32)) // generate other signer whose secret we don't know
+    var keys = schnorrRingSig.randomKeys(5);
+    var pubK = [];
+    keys.forEach(value => pubK.push(value.pubK));
+    var keyPair = keys[0];
 
-    // var keys = schnorrRingSig.randomKeys(5);
-    // var pubK = [];
-    // keys.forEach(value => pubK.push(value.pubK));
-    // var keyPair = keys[0];
-
-    var pubK =[y0,y1]; 
-    // var signature = schnorrRingSig.sign(pubK, keyPair, "heyoyoyoyoyo");
-    var signature = schnorrRingSig.sign(pubK, {privK:priv0, pubK:y0}, "heyoyoyoyoyo");
+    var signature = schnorrRingSig.sign(pubK, keyPair, "heyoyoyoyoyo");
 
     // verify
     var lhs = ec.curve.g.mul(signature.sigma)
