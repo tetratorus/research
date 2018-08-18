@@ -90,7 +90,7 @@ contract('Schnorr Tests', function(accounts) {
     // verify deblinded schnorr
     assert.equal(ec.curve.g.mul(sprime).add(y.mul(eprime)).getX().toString(16, 64), rprime.getX().toString(16, 64))
 
-    // verify deblinded schnorr on-chain
+    // verify deblinded schnorr on-chain, note: we probably don't want to do this ever
     var res2 = await instance.verifySchnorrSignature(
       '0x' + y.getX().toString(16, 64),
       '0x' + y.getY().toString(16, 64),
