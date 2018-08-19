@@ -53,6 +53,27 @@ contract('Ring Tests', function (accounts) {
     assert.equal(lhs.getX().toString(16, 64), rhs.getX().toString(16, 64))
   })
 
+  it("should schnorr ring sign multiple parties and verify", function () {
+    var keys = schnorrRingSig.randomKeys(5);
+    var pubK = [];
+    keys.forEach(value => pubK.push(value.pubK));
+    var keyPair = keys[0];
+
+    var signature = schnorrRingSig.sign(pubK, keyPair, "heyoyoyoyoyo");
+
+    // verify
+    var lhs = ec.curve.g.mul(signature.sigma)
+    var rhs = signature.R[0];
+    for (var i = 1; i < signature.R.length; i ++) {
+      rhs = rhs.add(signature.R[i]);
+    }
+    for (var i = 0; i < signature.R.length; i++) {
+      rhs = rhs.add(pubK[i].mul(ec.curve.n.sub(new BN(signature.h[i], 16)).umod(ec.curve.n)));
+    }
+    assert.equal(schnorrRingSig.verify(signature.m, signature.R, signature.h, pubK, signature.sigma), lhs.getX().toString(16, 64) === rhs.getX().toString(16, 64))
+
+  })
+
   it('should unique ring sign and verify between two parties', function () {
     // https://fc13.ifca.ai/proc/5-1.pdf
     // generate params
