@@ -125,7 +125,22 @@ schnorrRingSignature.verify = function (m, R, h, pubK, sigma) {
   return firstTest && secondTest;
 }
 */
-  function verifySchnorrRingSignature(string message, uint256[] Rx, uint256[] Ry, bytes32[] h, uint256[] pubX, uint256[] pubY, uint256 sigma) view public returns (bool) {
+  function verifySchnorrRingSignature(string message, uint256[] Rx, uint256[] Ry, uint256[] h, uint256[] pubX, uint256[] pubY, uint256 sigma) view public returns (bool) {
     Curve.Point memory lhs = Curve.scalarBaseMult(sigma);
+    Curve.Point memory rhs = Curve.Point({X:Rx[0], Y: Ry[0]});
+    for (uint256 i = 1; i < Rx.length; i ++) {
+      rhs = rhs.pointAdd(Curve.Point({X:Rx[i], Y: Ry[i]}));
+    }
+    for (i = 0; i < Rx.length; i ++) {
+      rhs = rhs.pointAdd(Curve.Point({X:pubX[i], Y:pubY[i]}).scalarMult(h[i]).negate());
+    }
+    bool firstTest = lhs.equal(rhs);
+    bool secondTest = true;
+    for (i = 0; i < Rx.length; i ++) {
+      if (h[i] != uint256(keccak256(abi.encodePacked(message,uintToString(Rx[i]))))) {
+        secondTest = false;
+      }
+    }
+    return firstTest && secondTest;
   }
 }

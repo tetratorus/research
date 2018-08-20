@@ -2,10 +2,12 @@
 var Elliptic = require('ec-altbn128').ec
 var ec = new Elliptic('altbn128')
 var BN = require('bn.js')
+var EC = artifacts.require('EC')
 
 var keccak256 = require('../../utils/keccak256.js')
 var random = require('../../utils/random.js')(ec)
 var schnorr = require('../../src/schnorr.js')
+var schnorrRingSig = require('../../src/schnorrRingSignature.js');
 
 var getPointFromX = function (x) {
   while (true) {
@@ -53,13 +55,14 @@ contract('Ring Tests', function (accounts) {
     assert.equal(lhs.getX().toString(16, 64), rhs.getX().toString(16, 64))
   })
 
-  it("should schnorr ring sign multiple parties and verify", function () {
+  it("should schnorr ring sign multiple parties and verify", async function () {
+    var m = "heyoyoyoyoyo";
     var keys = schnorrRingSig.randomKeys(5);
     var pubK = [];
     keys.forEach(value => pubK.push(value.pubK));
     var keyPair = keys[0];
 
-    var signature = schnorrRingSig.sign(pubK, keyPair, "heyoyoyoyoyo");
+    var signature = schnorrRingSig.sign(pubK, keyPair, m);
 
     // verify
     var lhs = ec.curve.g.mul(signature.sigma)
@@ -71,7 +74,33 @@ contract('Ring Tests', function (accounts) {
       rhs = rhs.add(pubK[i].mul(ec.curve.n.sub(new BN(signature.h[i], 16)).umod(ec.curve.n)));
     }
     assert.equal(schnorrRingSig.verify(signature.m, signature.R, signature.h, pubK, signature.sigma), lhs.getX().toString(16, 64) === rhs.getX().toString(16, 64))
-
+    
+    // test on-chain verificationo
+    var instance = await EC.deployed()
+    var Rx = []
+    var Ry = []
+    var pubX = [];
+    var pubY = [];
+    var h = [];
+    for (var i = 0; i < signature.R.length; i++) {
+      Rx.push("0x" + signature.R[i].getX().toString(16,64))
+      Ry.push("0x" + signature.R[i].getY().toString(16,64))
+      h.push("0x" + signature.h[i]);
+      pubX.push("0x" + pubK[i].getX().toString(16,64));
+      pubY.push("0x" + pubK[i].getY().toString(16,64));
+    }
+    var sigmaTest = new BN(signature.sigma.umod(ec.curve.n).toString(16,64), 16);
+    assert.equal(schnorrRingSig.verify(signature.m, signature.R, signature.h, pubK, sigmaTest), lhs.getX().toString(16, 64) === rhs.getX().toString(16, 64))
+    var res = await instance.verifySchnorrRingSignature(
+      m,
+      Rx,
+      Ry,
+      h,
+      pubX,
+      pubY,
+      "0x" + signature.sigma.umod(ec.curve.n).toString(16,64)
+    )
+    assert.equal(res, true)
   })
 
   it('should unique ring sign and verify between two parties', function () {
