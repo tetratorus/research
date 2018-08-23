@@ -102,7 +102,7 @@ schnorrRingSignature.verify = function (m, R, h, pubK, sigma) {
     rhs = rhs.add(R[i])
   }
   for (let i = 0; i < R.length; i++) {
-    rhs = rhs.add(pubK[i].mul(ec.curve.n.sub(new BN(h[i], 16)).umod(ec.curve.n)))
+    rhs = rhs.add(pubK[i].mul(h[i]).neg())
   }
   // verification sigma test
   var firstTest = lhs.getX().toString(16, 64) === rhs.getX().toString(16, 64)
@@ -111,7 +111,6 @@ schnorrRingSignature.verify = function (m, R, h, pubK, sigma) {
   for (let i = 0; i < R.length; i++) {
     if (h[i] !== keccak256(m + R[i].getX().toString())) secondTest = false
   }
-
   return firstTest && secondTest
 }
 
