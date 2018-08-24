@@ -1,4 +1,4 @@
-##Torus Crypto Libary 
+# Torus Crypto Libary 
 
 This repository implements several cryptographic schemes necessary for Torus. The schemes are verified in solidity and utilize the altBN128 curve include:
 
