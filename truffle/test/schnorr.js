@@ -7,6 +7,7 @@ var EC = artifacts.require('EC')
 var keccak256 = require('../../utils/keccak256.js')
 var random = require('../../utils/random.js')(ec)
 var schnorr = require('../../src/schnorr.js')
+var schnorrBlindSignature = require("../../src/schnorrBlindSignature.js")
 
 contract('Schnorr Tests', function (accounts) {
   it('should sign and verify', function () {
@@ -51,6 +52,8 @@ contract('Schnorr Tests', function (accounts) {
     var privInv = ec.curve.n.sub(priv).umod(ec.curve.n)
     var y = ec.curve.g.mul(privInv)
 
+    var abstractedCommitment = schnorrBlindSignature.generateCommitment()
+
     // generate commitment
     var k = random(32)
     var r = ec.curve.g.mul(k)
@@ -64,11 +67,17 @@ contract('Schnorr Tests', function (accounts) {
     var eprime = new BN(keccak256(m + rprime.getX().toString()), 16)
     var e = eprime.sub(beta).umod(ec.curve.n)
 
+    var abstractedBlindCommitment = schnorrBlindSignature.generateBlindingCommitment(m, abstractedCommitment.r, y)
+
     // sign
     var s = k.add(priv.mul(e)).umod(ec.curve.n)
 
+    var abstractedSignature = schnorrBlindSignature.sign(m, priv, abstractedBlindCommitment.e, abstractedCommitment.k)
+
     // verify blind schnorr
     assert.equal(ec.curve.g.mul(s).add(y.mul(e)).getX().toString(16, 64), r.getX().toString(16, 64))
+    
+    assert.equal(schnorrBlindSignature.verify(abstractedSignature.s, y, abstractedBlindCommitment.e, abstractedCommitment.r), true)
 
     // verify blind schnorr on-chain
     var instance = await EC.deployed()

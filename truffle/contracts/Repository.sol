@@ -72,11 +72,14 @@ contract Repository is EC {
       require(bytes32(_pubX[i]) == topic.sources[i]);
     }
 
-
     //should be legit ring sig
     require(verifySchnorrRingSignature(_message, _Rx, _Ry, _h, _pubX, _pubY, _sigma));
     //whitelist sender
     topicRingSigLog[topicHashBytes32][msg.sender] = true;
+  }
+
+  function answerQuestion(string _message) public {
+    
   }
 
   //UTILS
