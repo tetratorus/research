@@ -17,18 +17,32 @@ contract Repository is EC {
     uint256 deposit;
   }
 
+  struct MCQAnswer {
+    uint256 k;
+    uint256[] elligibleE;
+    uint256 pubKx;
+  }
+
   mapping(bytes32 => Topic) topicStore;
-  mapping(bytes32 => mapping(address => bool)) topicRingSigLog;
+  mapping(bytes32 => mapping(address => uint256)) topicKLog;
+  mapping(bytes32 => mapping(address => uint256[])) topicEligibleE;
+  mapping(bytes32 => mapping(address => MCQAnswer)) answerLog;
   uint256 topicNonce = 0;
 
   event TopicRegistered(bytes32 topicHash);
+  event AddressRegistered(bytes32 topicHash, address _address, uint256 k);
+  event Answer(bytes32 topicHash, uint256 pubKx, uint256 e); 
 
   constructor() public {
 
   }
 
-  function viewRegistration(bytes32 _topicHash, address _addressToCheck) view public returns (bool) {
-    return topicRingSigLog[_topicHash][_addressToCheck];
+  function viewRegistrationK(bytes32 _topicHash, address _addressToCheck) view public returns (uint256) {
+    return answerLog[_topicHash][_addressToCheck].k;
+  }
+
+  function viewRegistrationPubK(bytes32 _topicHash, address _addressToCheck) view public returns (uint256) {
+    return answerLog[_topicHash][_addressToCheck].pubKx;
   }
 
   function viewQuestion(bytes32 _topicHash) view public returns(bytes) {
@@ -61,25 +75,42 @@ contract Repository is EC {
   event Trace3(bool i);
 
   //TODO: decide on bytes32/ using just strings everywhere
-  function registerAddressToTopic(string _message, uint256[] _Rx, uint256[] _Ry, uint256[] _h, uint256[] _pubX, uint256[] _pubY, uint256 _sigma) public {
+  function registerAddressToTopic(string _topicHash, string _pubKx, uint256[] _Rx, uint256[] _Ry, uint256[] _h, uint256[] _pubX, uint256[] _pubY, uint256 _sigma, uint256 _k) public {
     //message should refer to topicHash
-    bytes32 topicHashBytes32 = bytesToBytes32(fromHex(_message),0);
-    Topic memory topic = topicStore[topicHashBytes32];
+    string memory _message = strings.concat(_topicHash.toSlice(), _pubKx.toSlice());
+    bytes32 topicHashBytes32 = bytesToBytes32(fromHex(_topicHash), 0);
+    uint256 pubKUint256 = fromHex(_pubKx).toUint(0);
+    bytes32[] sources = topicStore[topicHashBytes32].sources;
 
     //pubKs should refer to stored sources (in the right order);
-    for(uint256 i = 0; i < topic.sources.length; i++) {
+    for(uint256 i = 0; i < sources.length; i++) {
       //TODO: do we need to check both X and Y? 
-      require(bytes32(_pubX[i]) == topic.sources[i]);
+      require(bytes32(_pubX[i]) == sources[i]);
     }
 
     //should be legit ring sig
     require(verifySchnorrRingSignature(_message, _Rx, _Ry, _h, _pubX, _pubY, _sigma));
-    //whitelist sender
-    topicRingSigLog[topicHashBytes32][msg.sender] = true;
+    //whitelist sender and commit k
+    //TODO: is storing k and r cheaper? or working with, opssibly create k randomly in solidity
+    answerLog[topicHashBytes32][msg.sender] = MCQAnswer({pubKx: pubKUint256, k: _k, elligibleE: new uint[](0)});
+
+    emit AddressRegistered(topicHashBytes32, msg.sender, _k);
   }
 
-  function answerQuestion(string _message) public {
-    
+
+  //TODO: make only publisher
+  function commitMCQ(bytes32 _topicHash, address _source, uint256[] _e) public {
+    require(answerLog[_topicHash][_source].k != 0);
+    answerLog[_topicHash][_source].elligibleE = _e;
+  }
+
+  function answerMCQ(bytes32 _topicHash, address _source, uint256 pubKy, uint256 _e, uint256 _s) public {
+    MCQAnswer memory answer = answerLog[_topicHash][_source];
+    uint256 X; 
+    uint256 Y; 
+    (X,Y) = libScalarBaseMult(answer.k);
+    require(verifySchnorrSignature(answer.pubKx, pubKy, X, _e, _s));
+    emit Answer(_topicHash, answer.pubKx, _e);
   }
 
   //UTILS
