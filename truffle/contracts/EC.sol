@@ -54,9 +54,14 @@ contract EC {
     return Curve.isOnCurve(Curve.Point({X: aX, Y: aY}));
   }
 
-  function libScalarBaseMult(uint256 x) public view returns (uint256, uint256) {
-    Curve.Point memory res = Curve.scalarMult(Curve.generator(), x);
-    return (res.X, res.Y);
+  // function libScalarBaseMult(uint256 x) public view returns (uint256, uint256) {
+  //   Curve.Point memory res = Curve.scalarMult(Curve.generator(), x);
+  //   return (res.X, res.Y);
+  // }
+
+  function libHackyScalarBaseMult(uint256 x, uint256[] points, uint256 _index) public view returns (uint256, uint256, uint256) {
+    (Curve.Point memory res, uint256 index) = Curve.hackyScalarMult(Curve.generator(), x, points, _index);
+    return (res.X, res.Y, index);
   }
 
   function libPointAdd(uint256 aX, uint256 aY, uint256 bX, uint256 bY) public view returns (uint256, uint256) {
@@ -64,9 +69,14 @@ contract EC {
     return (res.X, res.Y);
   }
 
-  function libScalarMult(uint256 aX, uint256 aY, uint256 s) public view returns (uint256, uint256) {
-    Curve.Point memory res = Curve.scalarMult(Curve.Point({X: aX, Y: aY}), s);
-    return (res.X, res.Y);
+  // function libScalarMult(uint256 aX, uint256 aY, uint256 s) public view returns (uint256, uint256) {
+  //   Curve.Point memory res = Curve.scalarMult(Curve.Point({X: aX, Y: aY}), s);
+  //   return (res.X, res.Y);
+  // }
+
+  function libHackyScalarMult(uint256 aX, uint256 aY, uint256 s, uint256[] points, uint256 _index) public view returns (uint256, uint256, uint256) {
+    (Curve.Point memory res, uint256 index) = Curve.hackyScalarMult(Curve.Point({X: aX, Y: aY}), s, points, _index);
+    return (res.X, res.Y, index);
   }
 
   function libExpMod(uint256 base, uint256 exponent, uint256 modulus) public view returns (uint256 retval) {
@@ -90,10 +100,15 @@ contract EC {
     str = string(s);
   }
 
-  function verifySchnorrSignatureOnMessage(uint256 pubX, uint256 pubY, string message, uint256 challenge, uint256 proof) view public returns (bool) {
-    Curve.Point memory sum = Curve.pointAdd(Curve.Point({X: pubX, Y: pubY}).scalarMult(challenge), Curve.scalarBaseMult(proof)); // y^e*g^s = r
+  function verifySchnorrSignatureOnMessage(uint256 pubX, uint256 pubY, string message, uint256 challenge, uint256 proof, uint256[] points, uint256 _index) view public returns (bool, uint256 index) {
+    index = _index;
+    Curve.Point memory sum;
+    Curve.Point memory gs;
+    (sum, index) = Curve.Point({X: pubX, Y: pubY}).hackyScalarMult(challenge, points, _index);
+    (gs, index) = Curve.hackyScalarBaseMult(proof, points, index);
+    sum = Curve.pointAdd(sum, gs); // y^e*g^s = r
     uint256 projection = sum.X % Curve.genOrder();
-    return (challenge == uint256(keccak256(abi.encodePacked(message,uintToString(projection))))); // e = H(m, r)
+    return (challenge == uint256(keccak256(abi.encodePacked(message,uintToString(projection)))), index); // e = H(m, r)
   }
 
   function verifySchnorrSignature(uint256 pubX, uint256 pubY, uint256 r, uint256 challenge, uint256 proof) view public returns (bool) {
