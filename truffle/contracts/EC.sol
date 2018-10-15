@@ -1,11 +1,9 @@
 pragma solidity ^0.4.24;
 
-import {strings} from './strings.sol';
 import {altbn128 as Curve} from './altbn128.sol';
 
 contract EC {
   using Curve for Curve.Point;
-  using strings for string;
 
   function libGenOrder() public pure returns (uint256) {
     return Curve.genOrder();

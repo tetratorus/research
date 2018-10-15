@@ -3,6 +3,7 @@ pragma solidity ^0.4.24;
 import "./EC.sol";
 import "./BytesLib.sol";
 import {altbn128 as Curve} from "./altbn128.sol";
+import {Strings as strings} from "./strings.sol";
 import "./strings.sol";
 
 
@@ -80,7 +81,7 @@ contract Repository is EC {
     string memory _message = strings.concat(_topicHash.toSlice(), _pubKx.toSlice());
     bytes32 topicHashBytes32 = bytesToBytes32(fromHex(_topicHash), 0);
     uint256 pubKUint256 = fromHex(_pubKx).toUint(0);
-    bytes32[] sources = topicStore[topicHashBytes32].sources;
+    bytes32[] memory sources = topicStore[topicHashBytes32].sources;
 
     //pubKs should refer to stored sources (in the right order);
     for(uint256 i = 0; i < sources.length; i++) {
@@ -115,7 +116,7 @@ contract Repository is EC {
 
   //UTILS
   // Nick Johnson https://ethereum.stackexchange.com/questions/4170/how-to-convert-a-uint-to-bytes-in-solidity
-  function uint256ToBytes(uint256 x) internal returns (bytes b) {
+  function uint256ToBytes(uint256 x) internal pure returns (bytes b) {
     b = new bytes(32);
     assembly { mstore(add(b, 32), x) }
   }
@@ -139,7 +140,7 @@ contract Repository is EC {
 }
 
   // Tjaden Hess https://ethereum.stackexchange.com/questions/884/how-to-convert-an-address-to-bytes-in-solidity
-  function addressToBytes(address a) internal returns (bytes b) {
+  function addressToBytes(address a) internal pure returns (bytes b) {
     assembly {
         let m := mload(0x40)
         mstore(add(m, 20), xor(0x140000000000000000000000000000000000000000, a))

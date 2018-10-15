@@ -8,7 +8,7 @@ var Repository = artifacts.require('Repository')
 
 var keccak256 = require('../../utils/keccak256.js')
 var random = require('../../utils/random.js')(ec)
-var schnorr = require('../../src/schnorr.js')
+var schnorr = require('../../src/schnorr_altbn128.js')
 var schnorrRingSig = require('../../src/schnorrRingSignature.js');
 var schnorrBlindSig = require('../../src/schnorrBlindSignature.js');
 
