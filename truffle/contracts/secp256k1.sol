@@ -231,46 +231,6 @@ contract secp256k1 {
     return uint256(t1);
   }
 
-  // function pointAdd(uint256[2] a, uint256[2] b) public pure returns (uint256[2] R) {
-  //       if(a[1] == 0)
-  //           return b;
-  //       if(b[1] == 0)
-  //           return a;
-  //       if (a[0] == b[0]) {
-  //           if (a[1] != b[1]) {
-  //             return; // R is [0, 0]
-  //           }
-  //           else {
-  //             revert();
-  //             // TODO DOUBLE
-  //           }
-  //       }
-  //       uint256 h = addmod(b[0], FIELD_ORDER - a[0], FIELD_ORDER);
-  //       uint256 r = addmod(b[1], FIELD_ORDER - a[1], FIELD_ORDER);
-  //       uint256 h2 = mulmod(h, h, FIELD_ORDER);
-  //       uint256 h3 = mulmod(h2, h, FIELD_ORDER);
-  //       uint256 axh2 = mulmod(a[0], h2, FIELD_ORDER);
-  //       R[0] = addmod(  // r^2 - h3 - 2 * axh2 modulo FIELD_ORDER
-  //         addmod(
-  //           mulmod(r, r, FIELD_ORDER),
-  //           FIELD_ORDER - h3,
-  //           FIELD_ORDER
-  //         ),
-  //         mulmod(2, axh2, FIELD_ORDER),
-  //         FIELD_ORDER
-  //       );
-  //       R[1] = addmod(
-  //         mulmod(r, addmod(axh2, R[0], FIELD_ORDER), FIELD_ORDER),
-  //         mulmod(b[0], h3, FIELD_ORDER),
-  //         FIELD_ORDER
-  //       );
-  //       uint256 z = invmod(h, FIELD_ORDER);
-  //       uint256 z2 = mulmod(z, z, FIELD_ORDER);
-  //       R[0] = mulmod(R[0], z2, FIELD_ORDER);
-  //       R[1] = mulmod(R[1], mulmod(z, z2, FIELD_ORDER), FIELD_ORDER);
-  //       return;
-  //   }
-
   function pointAdd(uint256[2] a, uint256[2] b) public pure returns (uint256[2] S) {
     if(a[0] == 0 && a[1] == 0)
         return b;
