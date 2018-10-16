@@ -3,8 +3,6 @@ pragma solidity ^0.4.24;
 contract secp256k1 {
   uint256 public constant FIELD_ORDER = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f;
 
-  // Number of elements in the field (often called `q`)
-
   uint256 public constant GEN_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141;
   uint256 public constant CURVE_B = 7;
   uint256 public constant CURVE_A = 0;
@@ -128,21 +126,21 @@ contract secp256k1 {
     return addmod(p_cubed, CURVE_B, FIELD_ORDER) == mulmod(p[1], p[1], FIELD_ORDER);
   }
 
-  function hackyScalarBaseMult(uint256 x, uint256[] points, uint256[1] memory index) public pure
+  function hackyScalarBaseMult(uint256 x, uint256[] precomputes, uint256[2] memory indices) public pure
     returns (uint256[2])
   {
-    return hackyScalarMult(generator(), x, points, index);
+    return hackyScalarMult(generator(), x, precomputes, indices);
   }
 
   /*
     * Multiply point by a scalar
   **/
-  function hackyScalarMult(uint256[2] p, uint256 s, uint256[] points, uint256[1] memory index) public pure
+  function hackyScalarMult(uint256[2] p, uint256 s, uint256[] precomputes, uint256[2] memory indices) public pure
     returns (uint256[2])
   {
-    require(ecmulVerify(p, s, [points[index[0]], points[index[0]+1]]));
-    index[0] = index[0] + 2;
-    return ([points[index[0] - 2], points[index[0] - 1]]);
+    require(ecmulVerify(p, s, [precomputes[indices[0]], precomputes[indices[0]+1]]));
+    indices[0] = indices[0] + 2;
+    return ([precomputes[indices[0] - 2], precomputes[indices[0] - 1]]);
   }
 
   function expMod(uint256 base, uint256 exponent, uint256 modulus) public view
@@ -204,61 +202,101 @@ contract secp256k1 {
     str = string(s);
   }
 
-  function verifySchnorrSignatureOnMessage(uint256[2] pub, string message, uint256 challenge, uint256 proof, uint256[] points, uint256[1] memory index) public pure returns (bool) {
+  function verifySchnorrSignatureOnMessage(uint256[2] pub, string message, uint256 challenge, uint256 proof, uint256[] precomputes, uint256[2] memory indices) public pure
+    returns (bool)
+  {
     // y^e*g^s = r
-    uint256[2] memory ye = hackyScalarMult(pub, challenge, points, index);
-    uint256[2] memory gs = hackyScalarBaseMult(proof, points, index);
+    uint256[2] memory ye = hackyScalarMult(pub, challenge, precomputes, indices);
+    uint256[2] memory gs = hackyScalarBaseMult(proof, precomputes, indices);
     uint256 projection = pointAdd(ye, gs)[0] % genOrder();
     return (challenge == uint256(keccak256(abi.encodePacked(message, uintToString(projection))))); // e = H(m, r)
   }
 
-  function invmod(uint256 a, uint256 p) public pure returns (uint256) {
-    if (a == 0 || a == p || p == 0)
-      revert();
-    if (a > p)
-      a = a % p;
-    int t1;
-    int t2 = 1;
-    uint256 r1 = p;
-    uint256 r2 = a;
+  function invMod(uint256 a) public pure
+    returns(uint256 invA)
+  {
+    uint256 t=0;
+    uint256 newT=1;
+    uint256 r=FIELD_ORDER;
+    uint256 newR=a;
     uint256 q;
-    while (r2 != 0) {
-      q = r1 / r2;
-      (t1, t2, r1, r2) = (t2, t1 - int(q) * t2, r2, r1 - q * r2);
+    while (newR != 0) {
+      q = r / newR;
+
+      (t, newT) = (newT, addmod(t , (FIELD_ORDER - mulmod(q, newT, FIELD_ORDER)), FIELD_ORDER));
+      (r, newR) = (newR, r - q * newR );
     }
-    if (t1 < 0)
-      return (p - uint256(-t1));
-    return uint256(t1);
+
+    return t;
   }
 
-  function pointAdd(uint256[2] a, uint256[2] b) public pure returns (uint256[2] S) {
+  function hackyInvMod(uint256 a, uint256[] precomputes, uint256[2] memory indices) public pure
+    returns (uint256 b)
+  {
+    require(mulmod(a, precomputes[precomputes.length - 1 - indices[1]], FIELD_ORDER) == 1);
+    indices[1] = indices[1] + 1;
+    return precomputes[precomputes.length - indices[1]];
+  }
+
+  function hackyPointAdd(uint256[2] a, uint256[2] b, uint256[] precomputes, uint256[2] memory indices) public pure
+    returns (uint256[2])
+  {
+    if(b[0] == 0 && b[1] == 0)
+        return b;
+    if(a[0] == 0 && a[1] == 0)
+        return b;
+    if (b[0] == a[0]) {
+      if (b[1] != a[1])
+          return;
+      else {
+        return hackyToZ1(_double([b[0], b[1], 1]), precomputes, indices);
+      }
+    }
+    uint256[3] memory R;
+    uint256[3] memory h;
+    h[0] = addmod(a[0], FIELD_ORDER - b[0], FIELD_ORDER);
+    uint256 r = addmod(a[1], FIELD_ORDER - b[1], FIELD_ORDER);
+    h[1] = mulmod(h[0], h[0], FIELD_ORDER);
+    h[2] = mulmod(h[1], h[0], FIELD_ORDER);
+    R[0] = addmod(mulmod(r, r, FIELD_ORDER), FIELD_ORDER - h[2], FIELD_ORDER);
+    R[0] = addmod(R[0], FIELD_ORDER - mulmod(2, mulmod(b[0], h[1], FIELD_ORDER), FIELD_ORDER), FIELD_ORDER);
+    R[1] = mulmod(r, addmod(mulmod(b[0], h[1], FIELD_ORDER), FIELD_ORDER - R[0], FIELD_ORDER), FIELD_ORDER);
+    R[1] = addmod(R[1], FIELD_ORDER - mulmod(b[1], h[2], FIELD_ORDER), FIELD_ORDER);
+    R[2] = h[0];
+    return hackyToZ1(R, precomputes, indices);
+  }
+  
+  function pointAdd(uint256[2] a, uint256[2] b) public pure
+    returns (uint256[2])
+  {
     if(a[0] == 0 && a[1] == 0)
         return b;
     if(b[0] == 0 && b[1] == 0)
         return a;
-    uint256 p = FIELD_ORDER;
     if (a[0] == b[0]) {
       if (a[1] != b[1])
           return;
       else {
-        return toZ1(_double([a[0], a[1], 1]), p);
+        return toZ1(_double([a[0], a[1], 1]));
       }
     }
     uint256[3] memory R;
-    uint256 h = addmod(b[0], p - a[0], p);
-    uint256 r = addmod(b[1], p - a[1], p);
-    uint256 h2 = mulmod(h, h, p);
-    uint256 h3 = mulmod(h2, h, p);
-    uint256 Rx = addmod(mulmod(r, r, p), p - h3, p);
-    Rx = addmod(Rx, p - mulmod(2, mulmod(a[0], h2, p), p), p);
-    R[0] = Rx;
-    R[1] = mulmod(r, addmod(mulmod(a[0], h2, p), p - Rx, p), p);
-    R[1] = addmod(R[1], p - mulmod(a[1], h3, p), p);
-    R[2] = mulmod(h, 1, p);
-    return toZ1(R, p);
+    uint256[3] memory h;
+    h[0] = addmod(b[0], FIELD_ORDER - a[0], FIELD_ORDER);
+    uint256 r = addmod(b[1], FIELD_ORDER - a[1], FIELD_ORDER);
+    h[1] = mulmod(h[0], h[0], FIELD_ORDER);
+    h[2] = mulmod(h[1], h[0], FIELD_ORDER);
+    R[0] = addmod(mulmod(r, r, FIELD_ORDER), FIELD_ORDER - h[2], FIELD_ORDER);
+    R[0] = addmod(R[0], FIELD_ORDER - mulmod(2, mulmod(a[0], h[1], FIELD_ORDER), FIELD_ORDER), FIELD_ORDER);
+    R[1] = mulmod(r, addmod(mulmod(a[0], h[1], FIELD_ORDER), FIELD_ORDER - R[0], FIELD_ORDER), FIELD_ORDER);
+    R[1] = addmod(R[1], FIELD_ORDER - mulmod(a[1], h[2], FIELD_ORDER), FIELD_ORDER);
+    R[2] = h[0];
+    return toZ1(R);
   }
 
-  function _double(uint256[3] memory P) public pure returns (uint256[3] memory Q) {
+  function _double(uint256[3] P) public pure
+    returns (uint256[3] Q)
+  {
     uint256 p = FIELD_ORDER;
     if (P[2] == 0)
       return;
@@ -273,12 +311,22 @@ contract secp256k1 {
     Q[2] = mulmod(2, mulmod(Py, P[2], p), p);
   }
 
+  function toZ1(uint[3] PJ) public pure
+    returns (uint256[2] R)
+  {
+    uint zInv = invMod(PJ[2]);
+    uint zInv2 = mulmod(zInv, zInv, FIELD_ORDER);
+    R[0] = mulmod(PJ[0], zInv2, FIELD_ORDER);
+    R[1] = mulmod(PJ[1], mulmod(zInv, zInv2, FIELD_ORDER), FIELD_ORDER);
+  }
 
-  function toZ1(uint[3] PJ, uint prime) public pure returns (uint256[2] R) {
-    uint zInv = invmod(PJ[2], prime);
-    uint zInv2 = mulmod(zInv, zInv, prime);
-    R[0] = mulmod(PJ[0], zInv2, prime);
-    R[1] = mulmod(PJ[1], mulmod(zInv, zInv2, prime), prime);
+  function hackyToZ1(uint[3] PJ, uint256[] precomputes, uint256[2] memory indices) public pure
+    returns (uint256[2] R)
+  {
+    uint zInv = hackyInvMod(PJ[2], precomputes, indices);
+    uint zInv2 = mulmod(zInv, zInv, FIELD_ORDER);
+    R[0] = mulmod(PJ[0], zInv2, FIELD_ORDER);
+    R[1] = mulmod(PJ[1], mulmod(zInv, zInv2, FIELD_ORDER), FIELD_ORDER);  
   }
 
 }

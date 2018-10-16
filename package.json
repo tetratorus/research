@@ -22,6 +22,7 @@
     "ec-altbn128": "^6.5.1",
     "elliptic": "^6.4.1",
     "keccak": "^1.4.0",
+    "proxyquire": "^2.1.0",
     "schnorr": "^0.3.0"
   },
   "devDependencies": {
