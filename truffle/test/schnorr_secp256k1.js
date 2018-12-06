@@ -143,9 +143,9 @@ contract('Schnorr Tests (secp256k1)', function (accounts) {
     assert.equal(res[1].toString(16).padStart(64, '0'), gsum.getY().toString(16).padStart(64, '0'))
   })
 
-  it('should hacky curve point double on-chain', async function () {
+  // it('should hacky curve point double on-chain', async function () {
 
-  })
+  // })
 
   it('should sign and verify on-chain', async function () {
     // generate

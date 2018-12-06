@@ -1,18 +1,15 @@
-# Torus Crypto Libary 
+# Research
 
-This repository implements several cryptographic schemes necessary for Torus. The schemes are verified in solidity and utilize the altBN128 curve, they include:
+This repository implements cryptographic research in javascript/solidity that we kinda thought we would use. But don't. Yet?
 
-- Schnorr Signature
-https://www.researchgate.net/profile/Claus_Schnorr/publication/227088517_Efficient_signature_generation_by_smart_cards/links/0046353849579ce09c000000.pdf
-- Schnorr Blinded Signature
-ftp://ftp.di.ens.fr/pub/users/pointche/Slides/1996_asiacrypt.pdf
-- Unique Ring Signatre
-https://arxiv.org/pdf/1612.01188.pdf
-- Schnorr Ring Signature
-https://eprint.iacr.org/2003/067.pdf
-- Desinated Verifier Signature
-https://eprint.iacr.org/2003/192.pdf
+- [x] [Hacky Secp256k1 ecMull and ecAdd](https://ethresear.ch/t/you-can-kinda-abuse-ecrecover-to-do-ecmul-in-secp256k1-today/2384/10) - necessary for doing secp256k1 calculations efficiently on-chain
+- [x] Schnorr Signature + Verification (secp256k1)
+- [x] Schnorr Signature Verification On-Chain (secp256k1)
+- [x] Schnorr Blind Signatures (secp256k1)
+- [ ] Schnorr Blind Signature Verification On-Chain (secp256k1)
+- [x] Schnorr Ring Signatures (secp256k1)
+- [ ] Schnorr Ring Signature Verification On-Chain (secp256k1)
+- [x] Designated Verifier Signatures (secp256k1)
+- [ ] Designated Verifier Signature Verification On-Chain (secp256k1)
 
-
-
-To read more regarding the implementations, do take a look at the links provided.
+On-chain verification exists for altbn128 on the altbn128 branch.
